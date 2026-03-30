@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-telegram-bot
+langchain
+langchain-community
+lanchain_core
+ollama
+python-dotenv
+httpx
+duckduckgo-search
