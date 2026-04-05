@@ -69,7 +69,9 @@ GATEWAY_URL = "http://localhost:8000/chat"
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hi! I am NanoClaw, your AI assistant. Ask me anything!")
+    await update.message.reply_text("Hi there, I noticed you’re managing this system,"
+"I’m OmniClaw, your AI co-pilot."
+"How should I interact with you — formal, casual, or direct? And what’s your name?" )
 
 async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
@@ -84,19 +86,39 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     message = update.message.text
 
+    # typing indicator
+    await context.bot.send_chat_action(
+        chat_id=user_id,
+        action="typing"
+    )
+
     try:
         async with httpx.AsyncClient(timeout=60) as client:
+            logger.info(f"Sending request to gateway: {GATEWAY_URL}")
             response = await client.post(
                 GATEWAY_URL,
                 json={"user_id": user_id, "message": message},
                 headers={"x-api-key": SECRET_KEY}
             )
-            data = response.json()
-            reply = data.get("response", "Something went wrong")
+            
+            # Check if status code is successful
+            if response.status_code != 200:
+                logger.error(f"Gateway returned {response.status_code}: {response.text}")
+                reply = f"Gateway error (status {response.status_code}): {response.text}"
+            else:
+                data = response.json()
+                reply = data.get("response", "Gateway returned empty response")
+                logger.info(f"Successfully got response for user {user_id}")
 
+    except httpx.ConnectError as e:
+        logger.error(f"Cannot connect to gateway at {GATEWAY_URL}: {str(e)}")
+        reply = f"Cannot reach gateway at {GATEWAY_URL}. Is the server running?"
+    except httpx.TimeoutException as e:
+        logger.error(f"Gateway timeout: {str(e)}")
+        reply = "Gateway took too long to respond. Try again."
     except Exception as e:
-        logger.error(f"Gateway error: {str(e)}")
-        reply = f"Error reaching gateway: {str(e)}"
+        logger.error(f"Gateway error: {str(e)}", exc_info=True)
+        reply = f"Error: {str(e)}"
 
     await update.message.reply_text(reply)
 
