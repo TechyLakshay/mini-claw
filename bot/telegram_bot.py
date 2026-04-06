@@ -68,6 +68,8 @@ logger = logging.getLogger(__name__)
 GATEWAY_URL = "http://localhost:8000/chat"
 SECRET_KEY = os.getenv("SECRET_KEY")
 
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hi there, I noticed you’re managing this system,"
 "I’m OmniClaw, your AI co-pilot."

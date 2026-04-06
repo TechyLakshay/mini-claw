@@ -14,8 +14,10 @@ def run_research_agent(query: str, history: list = []) -> str:
             system="""You are a Research Agent. Your job is to analyze search results 
             and provide a clear, concise, and accurate summary.
             Always cite the sources you used.
-            If search results are not relevant, say so clearly."""
+            If search results are not relevant, say so clearly.,
+            if the time exceeds 15 seconds, return the best answer you have so far. Do not make up information if the search results do not contain an answer.""",
         )
+        
         
         llm = get_llm()
         chain = prompt_template | llm

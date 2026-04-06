@@ -68,7 +68,7 @@ def build_history(history: list) -> list:
 # -----------------------------
 # ✅ LLM Invocation
 # -----------------------------
-def invoke_llm(prompt: str, system: str, history: list = None) -> str:
+def  invoke_llm(prompt: str, system: str, history: list = None) -> str:
     try:
         if history is None:
             history = []
