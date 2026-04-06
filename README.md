@@ -1,5 +1,7 @@
 # Mini-Claw 🤖
 
+<img width="1134" height="494" alt="image" src="https://github.com/user-attachments/assets/b3cff353-272f-48a8-97fe-ed03bbec8230" />
+
 A local-first personal AI assistant built on Telegram with a multi-agent architecture, persistent memory, and tool calling. Inspired by the OpenClaw architecture pattern.
 
 **NOTE:** An intern made this demo app, it is currently work in progress.
