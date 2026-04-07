@@ -13,7 +13,7 @@ A local-first personal AI assistant built on Telegram with a multi-agent archite
 - Remembers your conversations across sessions
 - Searches the web for real-time information
 - Saves notes and reports as markdown files
-- Runs fully local — zero API cost
+- Runs fully local — zero API cost -> used ollama(no cost LLM running locally)
 
 ---
 
