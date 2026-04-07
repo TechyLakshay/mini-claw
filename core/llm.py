@@ -5,6 +5,8 @@ from langchain.messages import HumanMessage, AIMessage
 from dotenv import load_dotenv
 import os
 import logging
+from langchain_groq import ChatGroq
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -13,28 +15,11 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-# -----------------------------
-# ✅ LLM
-# -----------------------------
 def get_llm():
-    try:
-        logger.info("initializing LLM...")
-        return ChatOllama(
-            base_url=os.getenv("OLLAMA_BASE_URL"),
-            model=os.getenv("MODEL_NAME")
-        )
-    except Exception as e:
-        raise RuntimeError(f"LLM init failed: {e}")
-
-# def get_llm():
-#     try:
-#         logger.info("initializing LLM...")
-#         return ChatAnthropic(
-#             model=os.getenv("MODEL_NAME"),
-#             anthropic_api_key=os.getenv("CLAUDE_API_KEY")
-#         )
-#     except Exception as e:
-#         raise RuntimeError(f"LLM init failed: {e}")
+    return ChatGroq(
+        groq_api_key=os.getenv("GROQ_API_KEY"),
+        model_name="openai/gpt-oss-20b"
+    )
 
 
 # -----------------------------
