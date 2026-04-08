@@ -5,6 +5,7 @@ from langchain.messages import HumanMessage, AIMessage
 from dotenv import load_dotenv
 import os
 import logging
+from pathlib import Path
 from langchain_groq import ChatGroq
 
 
@@ -15,22 +16,50 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+CORE_CONTEXT_FILES = [
+    "IDENTITY.md",
+    "SOUL.md",
+]
+
+
 def get_llm():
     return ChatGroq(
         groq_api_key=os.getenv("GROQ_API_KEY"),
-        model_name="openai/gpt-oss-20b"
+        model_name="llama-3.1-8b-instant"
     )
 
 
 # -----------------------------
 # ✅ Dynamic Prompt Template
 # -----------------------------
+
+
+def load_core_context() -> str:
+    root_dir = Path(__file__).resolve().parent.parent
+    sections = []
+
+    for filename in CORE_CONTEXT_FILES:
+        file_path = root_dir / filename
+        if not file_path.exists():
+            continue
+
+        content = file_path.read_text(encoding="utf-8").strip()
+        if not content:
+            continue
+
+        sections.append(f"[{filename}]\n{content}")
+
+    return "\n\n".join(sections)
+
+
 def get_prompt_template(system: str):
     return ChatPromptTemplate.from_messages([
         ("system", system),
         MessagesPlaceholder(variable_name="history"),
         ("human", "{input}")
     ])
+
+
 
 
 # -----------------------------
@@ -59,7 +88,9 @@ def  invoke_llm(prompt: str, system: str, history: list = None) -> str:
             history = []
 
         llm = get_llm()
-        prompt_template = get_prompt_template(system)
+        core_context = load_core_context()
+        final_system = system if not core_context else f"{core_context}\n\n[Task Prompt]\n{system}"
+        prompt_template = get_prompt_template(final_system)
 
         chain = prompt_template | llm
 
