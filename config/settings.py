@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     """
     # Telegram
     telegram_token: str
+
+    # Terminal
+    
     
     # Gateway
     secret_key: str

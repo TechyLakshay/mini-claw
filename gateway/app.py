@@ -7,9 +7,11 @@ from memory.database import save_message, load_history
 import logging
 import uuid
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
+#logging
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,12 +19,19 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
+#fastapi
 app = FastAPI()
 
+#RATE LIMITING
+RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "5"))
+USER_REQUESTS: dict[str, list[float]] = {}
+
+#Request model
 class ChatRequest(BaseModel):
     user_id: str
     message: str
+
 
 def validate_request(req: ChatRequest):
     if not req.message.strip():
@@ -33,6 +42,25 @@ def validate_request(req: ChatRequest):
 def authenticate(api_key: str):
     if api_key != os.getenv("SECRET_KEY"):
         raise HTTPException(status_code=401, detail="Unauthorised")
+
+# Rate Limiting - Sliding Window Algorithm
+def enforce_rate_limit(user_id: str):
+    now = time.time()
+    recent_requests = USER_REQUESTS.get(user_id, [])
+    recent_requests = [
+        request_time
+        for request_time in recent_requests
+        if now - request_time < RATE_LIMIT_WINDOW_SECONDS
+    ]
+
+    if len(recent_requests) >= RATE_LIMIT_MAX_REQUESTS:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max {RATE_LIMIT_MAX_REQUESTS} requests in {RATE_LIMIT_WINDOW_SECONDS} seconds.",
+        )
+
+    recent_requests.append(now)
+    USER_REQUESTS[user_id] = recent_requests
 
 @app.get("/health")
 async def health():
@@ -46,6 +74,7 @@ async def chat(req: ChatRequest, x_api_key: str = Header(...)):
     try:
         authenticate(x_api_key)
         validate_request(req)
+        enforce_rate_limit(req.user_id)
 
         history = load_history(req.user_id)
         logger.info(f"request_id={request_id} history_loaded={len(history)} messages")
