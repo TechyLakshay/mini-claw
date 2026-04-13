@@ -6,6 +6,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+
 def run_research_agent(query: str, history: list = []) -> str:
     try:
         search_results = web_search(query)

@@ -19,13 +19,14 @@ load_dotenv()
 CORE_CONTEXT_FILES = [
     "IDENTITY.md",
     "SOUL.md",
+    "USER.md"
 ]
 
 
 def get_llm():
-    return ChatGroq(
-        groq_api_key=os.getenv("GROQ_API_KEY"),
-        model_name="llama-3.1-8b-instant"
+    return ChatOllama(
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        model=os.getenv("MODEL_NAME", "llama3.1")
     )
 
 
