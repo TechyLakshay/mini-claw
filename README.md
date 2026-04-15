@@ -14,6 +14,7 @@ A local-first personal AI assistant built on Telegram and CLI with a multi-agent
 - Searches the web for real-time information
 - Saves notes and reports as markdown files
 - Runs fully local — zero API cost -> used ollama(no cost LLM running locally)
+- Now can understand test based on semantics
 
 ---
 
