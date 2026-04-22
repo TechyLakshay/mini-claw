@@ -69,6 +69,12 @@ def get_llm(
 
 
 def load_core_context() -> str:
+    """
+    load the context models which is used by the LLM
+    to identify all the workings, behaviour and other
+    context and strictly work according to them.
+    
+    """
     root_dir = Path(__file__).resolve().parent.parent
     sections = []
 

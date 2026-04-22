@@ -1,102 +1,91 @@
-from core.llm import invoke_llm, build_history
-from agents.research_agent import run_research_agent
-# from tools.tts import text_to_speech
-from agents.writer_agent import run_writer_agent
 import logging
+
+from core.llm import invoke_llm
+from tools.research_tool import run_research_tool
+from tools.writer_tool import run_writer_tool
 
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
-
-
 
 logger = logging.getLogger(__name__)
 
 
-# -----------------------------
-# ✅ System Prompt
-# -----------------------------
 ORCHESTRATOR_SYSTEM = """
-You are an Orchestrator Agent.
+You are the only agent in the system.
 
-Classify the user request into ONE category:
+Decide the best next action for the user request.
 
-RESEARCH → facts, search, information
-WRITE → create/save notes or content
-CHAT → casual conversation
+Available actions:
+- RESEARCH_TOOL -> facts, search, current information, summaries based on search
+- WRITER_TOOL -> create structured markdown and save notes/content
+- CHAT -> normal direct conversation without tool use
 
 Rules:
-- Answer with ONLY ONE WORD
+- Answer with ONLY ONE TOKEN
 - No explanation
-- Just: RESEARCH or WRITE or CHAT
+- Reply with exactly one of: RESEARCH_TOOL, WRITER_TOOL, CHAT
 """
 
-# -----------------------------
-# ✅ Agent Functions
-# -----------------------------
-def run_chat_agent(message: str, history: list):
+
+def run_chat_agent(message: str, history: list) -> str:
     logger.info("running chat agent...")
     return invoke_llm(
         prompt=message,
         system="You are NanoClaw, a helpful AI assistant. Be concise, clear, and friendly and answer accurately.",
-        history=history
+        history=history,
     )
 
-AGENTS = {
-    "RESEARCH": run_research_agent,
-    "WRITE": run_writer_agent,
-    "CHAT": run_chat_agent
+
+TOOLS = {
+    "RESEARCH_TOOL": run_research_tool,
+    "WRITER_TOOL": run_writer_tool,
+    "CHAT": run_chat_agent,
 }
 
-# -----------------------------
-# ✅ Decide Agent
-# -----------------------------
+
 def decide_agent(message: str, history: list) -> str:
     try:
-        logger.info("deciding agent...")
+        logger.info("deciding tool usage...")
         response = invoke_llm(
             prompt=message,
             system=ORCHESTRATOR_SYSTEM,
-            history=history
+            history=history,
         )
 
         decision = response.strip().upper()
         logger.info(f"Raw Decision: {decision}")
 
-        # ✅ Strong filtering
-        if "RESEARCH" in decision:
-            return "RESEARCH"
-        elif "WRITE" in decision:
-            return "WRITE"
-        elif "CHAT" in decision:
+        if "RESEARCH_TOOL" in decision:
+            return "RESEARCH_TOOL"
+        if "WRITER_TOOL" in decision:
+            return "WRITER_TOOL"
+        if "CHAT" in decision:
             return "CHAT"
 
         return "CHAT"
 
-    except Exception as e:
-        logger.error(f"Decision error: {str(e)}")
+    except Exception as exc:
+        logger.error(f"Decision error: {str(exc)}")
         return "CHAT"
 
-# -----------------------------
-# ✅ Main Orchestrator
-# -----------------------------
-def run_orchestrator(message: str, history: list = None):
-    if history is None:
-        history = []
+
+def run_orchestrator(message: str, history: list | None = None) -> str:
+    history = history or []
 
     try:
         decision = decide_agent(message, history)
-        logger.info(f"Routing → {decision}")
+        logger.info(f"Routing -> {decision}")
 
-        agent_fn = AGENTS.get(decision, run_chat_agent)
+        tool_fn = TOOLS.get(decision, run_chat_agent)
 
-        if decision == "WRITE":
-            return agent_fn(message, filename="note", history=history)
+        if decision == "WRITER_TOOL":
+            return tool_fn(message, filename="note", history=history)
 
-        return agent_fn(message, history)
+        return tool_fn(message, history)
 
-    except Exception as e:
-        logger.error(f"Orchestrator error: {str(e)}")
+    except Exception as exc:
+        logger.error(f"Orchestrator error: {str(exc)}")
         return "Something went wrong."
