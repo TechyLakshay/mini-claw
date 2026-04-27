@@ -26,6 +26,12 @@ MCP_SERVERS: dict[str, dict[str, Any]] = {
         "description": "Math tools: add_numbers, get_current_time",
         "tools": ["add_numbers", "get_current_time"],
     },
+    "password": {
+        "command": sys.executable,
+        "args": [str(_SERVERS_DIR / "password_server.py")],
+        "description": "Password tools: generate_password, check_password_strength",
+        "tools": ["generate_password", "check_password_strength"],
+    },
 }
 
 
