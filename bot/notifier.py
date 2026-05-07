@@ -32,3 +32,5 @@ def send_high_priority_notification(sender: str, subject: str, summary: str) -> 
     response.raise_for_status()
     logger.info(f"notifier:send:done status_code={response.status_code}")
     return "Telegram notification sent."
+
+
